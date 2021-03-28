@@ -10,7 +10,7 @@
     "test": "jest",
     "cdk": "cdk"
   },
-  "devDependencies": {
+  "devDependencies": { 
     "@aws-cdk/assert": "1.95.1",
     "@types/jest": "^26.0.10",
     "@types/node": "10.17.27",
@@ -21,7 +21,20 @@
     "typescript": "~3.9.7"
   },
   "dependencies": {
+    "@aws-cdk/aws-appsync": "^1.95.1",
+    "@aws-cdk/aws-cognito": "^1.95.1",
+    "@aws-cdk/aws-dynamodb": "^1.95.1",
+    "@aws-cdk/aws-events": "^1.95.1",
+    "@aws-cdk/aws-events-targets": "^1.95.1",
+    "@aws-cdk/aws-iam": "^1.95.1",
+    "@aws-cdk/aws-lambda": "^1.95.1",
+    "@aws-cdk/aws-sns": "^1.95.1",
+    "@aws-cdk/aws-sns-subscriptions": "^1.95.1",
+    "@aws-cdk/aws-stepfunctions": "^1.95.1",
+    "@aws-cdk/aws-stepfunctions-tasks": "^1.95.1",
     "@aws-cdk/core": "1.95.1",
+    "@types/aws-lambda": "^8.10.73",
+    "aws-sdk": "^2.874.0",
     "source-map-support": "^0.5.16"
   }
 }

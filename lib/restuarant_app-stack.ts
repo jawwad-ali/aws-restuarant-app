@@ -115,6 +115,15 @@ export class RestuarantAppStack extends cdk.Stack {
       })
     })
 
+    // Creating sns Topic 
+    const snsTopic = new sns.Topic(this, 'BookingRequest')
+    const email = new cdk.CfnParameter(this, 'emailParam', {
+      type: 'String'
+    })
+    snsTopic.addSubscription(
+      new snsSubscriptions.EmailSubscription(email.valueAsString)
+    )
+
     // DynamodbLambda
     const dynamoLambda = new lambda.Function(this, "restuarantDynamo", {
       functionName: "RestuarantLambda",
@@ -127,6 +136,48 @@ export class RestuarantAppStack extends cdk.Stack {
     })
     resutuarantTable.grantReadWriteData(dynamoLambda)
 
+    // lambda 2 
+    //role for sns lambda
+    const role = new iam.Role(this, 'snsLambdRole', {
+      assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com")
+    })
+    const policy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ['SNS:Publish', "logs:*", "ses:SendEmail"],
+      resources: ['*']
+    })
+    role.addToPolicy(policy)
+
+    // creating sns lambda
+    const snsLambda = new lambda.Function(this, 'sns_Handler', {
+      code: lambda.Code.fromAsset("lambda"),
+      handler: "snsLambda.handler",
+      runtime: lambda.Runtime.NODEJS_12_X,
+      environment: {
+        SNS_TOPIC_ARN: snsTopic.topicArn,
+      },
+      timeout: cdk.Duration.seconds(10),
+      role: role
+    })
+
+    // Step function
+    const firstStep = new stepFunctionsTasks.LambdaInvoke(this, "DynamoLambdaInvoke", {
+      lambdaFunction: dynamoLambda,
+    })
+    const secondStep = new stepFunctionsTasks.LambdaInvoke(this, "SNSLambdaInvoke", {
+      lambdaFunction: snsLambda,
+      inputPath: "$.Payload"
+    });
+
+    const stf_Chain = stepFunctions.Chain
+      .start(firstStep)
+      .next(secondStep)
+
+    const stateMachine = new stepFunctions.StateMachine(this, "stateMachine", {
+      definition: stf_Chain
+    })
+
+
     // RULE
     const rule = new Rule(this, "theRule", {
       ruleName: "lambdaInvokeRule",
@@ -134,7 +185,7 @@ export class RestuarantAppStack extends cdk.Stack {
         source: ["restaurant-app-events"],
       },
     });
-    rule.addTarget(new eventsTargets.LambdaFunction(dynamoLambda));
+    rule.addTarget(new eventsTargets.SfnStateMachine(stateMachine));
 
   }
 }

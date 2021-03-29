@@ -25,6 +25,8 @@ export const handler = async (event: EventBridgeEvent<string, any>, context: Con
                 Item: { id: randomBytes(16).toString("hex"), ...event.detail, isBooked: false },
             }
             await dynamoClient.put(params).promise();
+
+            returningPayload.SnsMessage = event.detail
         }
 
 
@@ -122,8 +124,4 @@ export const handler = async (event: EventBridgeEvent<string, any>, context: Con
         return returningPayload;
 
     }
-
-
-
-
 };
